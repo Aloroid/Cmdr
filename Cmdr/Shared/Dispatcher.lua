@@ -188,6 +188,10 @@ function Dispatcher:Run(...): string
 	return command:Run()
 end
 
+function Dispatcher:RunDeferred(...)
+	task.spawn(Dispatcher.Run, Dispatcher, ...)
+end
+
 --[=[
 	@within Dispatcher
 	@private
