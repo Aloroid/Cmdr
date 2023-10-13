@@ -4,6 +4,24 @@ local conditions = {
 			return text:sub(#arg + 1)
 		end
 	end,
+	[">"] = function(a, b)
+		return tonumber(a) > tonumber(b)
+	end,
+	[">="] = function(a, b)
+		return tonumber(a) >= tonumber(b)
+	end,
+	["<="] = function(a, b)
+		return tonumber(a) <= tonumber(b)
+	end,
+	["<"] = function(a, b)
+		return tonumber(a) < tonumber(b)
+	end,
+	["=="] = function(a, b)
+		return a == b
+	end,
+	["!="] = function(a, b)
+		return a ~= b
+	end,
 }
 
 return {

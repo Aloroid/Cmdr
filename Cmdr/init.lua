@@ -1,10 +1,16 @@
 local RunService = game:GetService("RunService")
 local Util = require(script.Shared:WaitForChild("Util"))
+local Types = require(script.Types)
+
+export type CommandDefinition = Types.CommandDefinition
+export type TypeDefinition<T> = Types.TypeDefinition<T>
+export type CmdrServer = Types.CmdrServer
+export type CmdrClient = Types.CmdrClient
+export type CommandContext = Types.CommandContext
 
 if RunService:IsServer() == false then
-	error(
-		"[Cmdr] Client scripts cannot require the server library. Please require the client library from the client to use Cmdr in your own code."
-	)
+	return require(script.CmdrClient) :: Types.CmdrServer & Types.CmdrClient
+	--error("Cmdr server module is somehow running on a client!")
 end
 
 --[=[
@@ -69,4 +75,4 @@ Cmdr.RemoteFunction.OnServerInvoke = function(player, text, options)
 	return Cmdr.Dispatcher:EvaluateAndRun(text, player, options)
 end
 
-return Cmdr
+return Cmdr :: Types.CmdrServer & Types.CmdrClient

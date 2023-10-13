@@ -1,3 +1,9 @@
+--[[
+	Custom bind command as we want to let the player bind their own inputs to
+	certain actions.
+	
+]]
+
 local UserInputService = game:GetService("UserInputService")
 
 return {
@@ -14,7 +20,7 @@ return {
 		{
 			Type = "command",
 			Name = "Command",
-			Description = "The command you want to run on this input",
+			Description = "The command you want to run when the input first starts.",
 		},
 		{
 			Type = "string",
@@ -29,19 +35,45 @@ return {
 
 		command = command .. " " .. arguments
 
-		if binds[bind] then
-			binds[bind]:Disconnect()
-		end
-
 		local bindType = context:GetArgument(1).Type.Name
+		local bindKey = bind
 
 		if bindType == "userInput" then
-			binds[bind] = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			local keys = {}
+			table.insert(keys, bind.stateModifier.Name)
+			for _, modifierKey in bind.modifiers do
+				table.insert(keys, modifierKey.Name)
+			end
+			table.insert(keys, bind.main.Name)
+			bindKey = table.concat(keys, "+")
+		end
+
+		if binds[bindKey] then
+			binds[bindKey]:Disconnect()
+		end
+
+		if bindType == "userInput" then
+			local signal
+
+			if bind.stateModifier == Enum.UserInputState.Begin then
+				signal = UserInputService.InputBegan
+			else
+				signal = UserInputService.InputEnded
+			end
+
+			binds[bindKey] = signal:Connect(function(input, gameProcessed)
 				if gameProcessed then
 					return
 				end
 
-				if input.UserInputType == bind or input.KeyCode == bind then
+				if input.UserInputType == bind.main or input.KeyCode == bind.main then
+					-- check if all the modifiers are true
+					for _, modifierKey in bind.modifiers do
+						if input:IsModifierKeyDown(modifierKey) == false then
+							return
+						end
+					end
+
 					context:Reply(
 						context.Dispatcher:EvaluateAndRun(
 							context.Cmdr.Util.RunEmbeddedCommands(context.Dispatcher, command)
@@ -52,7 +84,7 @@ return {
 		elseif bindType == "bindableResource" then
 			return "Unimplemented..."
 		elseif bindType == "player" then
-			binds[bind] = bind.Chatted:Connect(function(message)
+			binds[bindKey] = bind.Chatted:Connect(function(message)
 				local args = { message }
 				local chatCommand = context.Cmdr.Util.RunEmbeddedCommands(
 					context.Dispatcher,
@@ -65,6 +97,6 @@ return {
 			end)
 		end
 
-		return "Bound command to input."
+		return nil
 	end,
 }
